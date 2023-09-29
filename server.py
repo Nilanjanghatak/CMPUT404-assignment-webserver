@@ -1,5 +1,6 @@
 #  coding: utf-8 
 import socketserver
+import os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -30,9 +31,63 @@ import socketserver
 class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
-        self.data = self.request.recv(1024).strip()
+        self.data = self.request.recv(1024).strip().decode('utf-8')
         print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        #self.request.sendall(bytearray("OK",'utf-8'))
+        
+        method = self.data.split()[0]
+        path = self.data.split()[1] 
+
+        if method[:3] != "GET":
+            self.request.sendall(bytearray("HTTP/1.1 405 Method Not Allowed\r\n", 'utf-8'))
+
+        else:
+            if ".." in path:
+                self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\n",'utf-8'))
+            
+            elif path[-1] == '/':
+                fullpath = os.getcwd() + "/www" + path + "index.html"
+                try:
+                    file = open(fullpath)
+                    f = file.read()
+                    file.close()
+                except:
+                    self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\n", 'utf=8'))
+                    return
+                self.request.sendall(bytearray(f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {len(f)}\r\n\r\n{f}", 'utf-8'))
+            
+            elif path.endswith(".html"):
+                fullpath = os.getcwd() + "/www" + path
+                try:
+                    file = open(fullpath)
+                    f = file.read()
+                    file.close()
+                except:
+                    self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\n", 'utf=8'))
+                    return
+                self.request.sendall(bytearray(f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {len(f)}\r\n\r\n{f}", 'utf-8'))
+            
+            elif path.endswith(".css"):
+                fullpath = os.getcwd() + "/www" + path
+                try:
+                    file = open(fullpath)
+                    f = file.read()
+                    file.close()
+                except:
+                    self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\n", 'utf=8'))
+                    return
+                self.request.sendall(bytearray(f"HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nContent-Length: {len(f)}\r\n\r\n{f}", 'utf-8'))
+            
+            else:
+                fullpath = os.getcwd() + "/www" + path + "/index.html"
+                try:
+                    file = open(fullpath)
+                    f = file.read()
+                    file.close()
+                except:
+                    self.request.sendall(bytearray("HTTP/1.1 404 Not Found\r\n", 'utf-8'))
+                    return
+                self.request.sendall(bytearray(f"HTTP/1.1 301 Moved Permanently\r\nLocation: {path}/\r\n",'utf-8'))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
