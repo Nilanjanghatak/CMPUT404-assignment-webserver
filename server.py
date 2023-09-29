@@ -56,7 +56,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     return
                 self.request.sendall(bytearray(f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {len(f)}\r\n\r\n{f}", 'utf-8'))
             
-            elif path.endswith(".html"):
+            elif path[-5:] == ".html":
                 fullpath = os.getcwd() + "/www" + path
                 try:
                     file = open(fullpath)
@@ -67,7 +67,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     return
                 self.request.sendall(bytearray(f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {len(f)}\r\n\r\n{f}", 'utf-8'))
             
-            elif path.endswith(".css"):
+            elif path[-4:] == ".css":
                 fullpath = os.getcwd() + "/www" + path
                 try:
                     file = open(fullpath)
